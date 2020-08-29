@@ -12,7 +12,9 @@ import (
 )
 
 func main() {
+	// use environment variables
 	db, err := database.ConnectToDB("postgres", "1234", "gorm_article")
+
 	if err != nil {
 		panic(err.Error())
 	}
@@ -35,5 +37,6 @@ func auth(r *gin.Engine, u repository.UserService) {
 	auth := handler.NewAuthHandler(u)
 
 	r.POST("/auth/register", auth.Register())
+	r.POST("/auth/login", auth.Login())
 
 }

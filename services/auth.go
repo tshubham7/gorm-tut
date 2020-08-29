@@ -1,6 +1,8 @@
 package services
 
 import (
+	"errors"
+	"fmt"
 	"time"
 
 	"github.com/dgrijalva/jwt-go"
@@ -30,7 +32,14 @@ type auth struct {
 
 // AuthService ...
 type AuthService interface {
+	// create new user
 	Register(user RegisterRequest) (Authtoken, error)
+
+	// login user
+	Login(user RegisterRequest) (Authtoken, error)
+
+	// check if password is correct
+	IsPasswordValid(hash string, password string) bool
 }
 
 // NewAuthService ...
@@ -40,7 +49,7 @@ func NewAuthService(u repository.UserService) AuthService {
 }
 
 func getSecret() string {
-	// secret := os.Getenv("SECRET")
+	// use environment variable here
 	secret := "L2A0O4D7A8L4E1L6E3"
 	if secret == "" {
 		panic("SECRET env Missing")
@@ -79,13 +88,38 @@ func sign(ID string, email string) (Authtoken, error) {
 	}, err
 }
 
-func (a *auth) Register(user RegisterRequest) (Authtoken, error) {
+// IsPasswordValid ...
+func (a auth) IsPasswordValid(hash string, password string) bool {
+	if err := bcrypt.CompareHashAndPassword([]byte(hash), []byte(password)); err == nil {
+		return true
+	}
+	return false
+}
+
+// Register ...
+func (a auth) Register(user RegisterRequest) (Authtoken, error) {
 	um := user.ToModel()
 	err := a.u.Create(um).Scan(um).Error
 	if err != nil {
 		return Authtoken{}, err
 	}
 	return sign(um.ID.String(), um.Email)
+}
+
+// Login ...
+func (a auth) Login(user RegisterRequest) (Authtoken, error) {
+	um, err := a.u.GetByEmail(user.Email)
+	if err != nil {
+		return Authtoken{}, fmt.Errorf("Not user found with email %s", user.Email)
+	}
+
+	// checking password
+	if !a.IsPasswordValid(um.Password, user.Password) {
+		return Authtoken{}, errors.New("Invalid password")
+	}
+
+	return sign(um.ID.String(), um.Email)
+
 }
 
 // HashPassword generate a hash from password

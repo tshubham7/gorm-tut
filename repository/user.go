@@ -11,8 +11,14 @@ type user struct {
 
 // UserService ..
 type UserService interface {
+	// create new user
 	Create(user *models.User) *gorm.DB
+
+	// get user by id
 	GetByID(id string) (*models.User, error)
+
+	// get user by email
+	GetByEmail(id string) (*models.User, error)
 }
 
 // NewUserService ...
@@ -30,5 +36,13 @@ func (u *user) GetByID(id string) (*models.User, error) {
 	var user models.User
 
 	err := u.db.Table("users").Find(&user, id).Error
+	return &user, err
+}
+
+// GetByEmail ...
+func (u *user) GetByEmail(email string) (*models.User, error) {
+	var user models.User
+
+	err := u.db.Table("users").Where("email=?", email).First(&user).Error
 	return &user, err
 }
