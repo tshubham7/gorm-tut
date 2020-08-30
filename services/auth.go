@@ -27,7 +27,7 @@ type RegisterRequest struct {
 }
 
 type auth struct {
-	u repository.UserService
+	u repository.UserRepo
 }
 
 // AuthService ...
@@ -43,8 +43,7 @@ type AuthService interface {
 }
 
 // NewAuthService ...
-func NewAuthService(u repository.UserService) AuthService {
-	jawt = jwtauth.New("HS256", []byte(getSecret()), nil)
+func NewAuthService(u repository.UserRepo) AuthService {
 	return &auth{u}
 }
 
@@ -60,7 +59,8 @@ func getSecret() string {
 
 var jawt *jwtauth.JWTAuth
 
-func token() *jwtauth.JWTAuth {
+func Token() *jwtauth.JWTAuth {
+	jawt = jwtauth.New("HS256", []byte(getSecret()), nil)
 	return jawt
 }
 
@@ -76,11 +76,11 @@ func sign(ID string, email string) (Authtoken, error) {
 		claims["email"] = email
 	}
 
-	_, tokenString, err := token().Encode(claims)
+	_, tokenString, err := Token().Encode(claims)
 
 	claims["role"] = "refresh"
 	jwtauth.SetExpiryIn(claims, time.Hour*time.Duration(24*7))
-	_, refreshTokenString, err := token().Encode(claims)
+	_, refreshTokenString, err := Token().Encode(claims)
 	return Authtoken{
 		Token:        tokenString,
 		Expires:      expires,
@@ -103,7 +103,7 @@ func (a auth) Register(user RegisterRequest) (Authtoken, error) {
 	if err != nil {
 		return Authtoken{}, err
 	}
-	return sign(um.ID.String(), um.Email)
+	return sign(um.ID, um.Email)
 }
 
 // Login ...
@@ -118,7 +118,7 @@ func (a auth) Login(user RegisterRequest) (Authtoken, error) {
 		return Authtoken{}, errors.New("Invalid password")
 	}
 
-	return sign(um.ID.String(), um.Email)
+	return sign(um.ID, um.Email)
 
 }
 

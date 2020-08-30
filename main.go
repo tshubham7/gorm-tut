@@ -25,18 +25,31 @@ func main() {
 	fmt.Println("migration success")
 
 	r := gin.Default()
-
-	u := repository.NewUserService(db)
+	u := repository.NewUserRepo(db)
+	ar := repository.NewArticleRepo(db)
 	auth(r, u)
-
+	article(r, ar)
 	r.Run(":8080")
 }
 
 // auth service routes
-func auth(r *gin.Engine, u repository.UserService) {
-	auth := handler.NewAuthHandler(u)
+func auth(r *gin.Engine, u repository.UserRepo) {
+	h := handler.NewAuthHandler(u)
+	route := r.Group("api/auth")
+	{
+		route.POST("/register", h.Register())
+		route.POST("/login", h.Login())
+	}
+}
 
-	r.POST("/auth/register", auth.Register())
-	r.POST("/auth/login", auth.Login())
-
+// article service routes
+func article(r *gin.Engine, a repository.ArticleRepo) {
+	h := handler.NewArticleHandler(a)
+	route := r.Group("api/article")
+	// we want to add middleware to check jwt auth token
+	route.Use()
+	{
+		route.POST("/", h.Create())
+		route.GET("/", h.List())
+	}
 }

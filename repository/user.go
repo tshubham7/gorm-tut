@@ -9,8 +9,8 @@ type user struct {
 	db *gorm.DB
 }
 
-// UserService ..
-type UserService interface {
+// UserRepo ..
+type UserRepo interface {
 	// create new user
 	Create(user *models.User) *gorm.DB
 
@@ -21,8 +21,8 @@ type UserService interface {
 	GetByEmail(id string) (*models.User, error)
 }
 
-// NewUserService ...
-func NewUserService(db *gorm.DB) UserService {
+// NewUserRepo ...
+func NewUserRepo(db *gorm.DB) UserRepo {
 	return &user{db}
 }
 

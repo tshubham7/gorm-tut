@@ -9,7 +9,7 @@ import (
 
 // BaseModel contains common columns for all tables.
 type BaseModel struct {
-	ID        uuid.UUID  `json:"id" gorm:"type:uuid;primary_key;"`
+	ID        string     `json:"id" gorm:"type:uuid;primary_key;"`
 	CreatedAt time.Time  `json:"createdAt"`
 	UpdatedAt time.Time  `json:"updatedAt"`
 	DeletedAt *time.Time `json:"deletedAt" sql:"index"`

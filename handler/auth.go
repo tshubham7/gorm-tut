@@ -18,11 +18,11 @@ type AuthHandler interface {
 }
 
 type authHandler struct {
-	u repository.UserService
+	u repository.UserRepo
 }
 
 //NewAuthHandler ..
-func NewAuthHandler(u repository.UserService) AuthHandler {
+func NewAuthHandler(u repository.UserRepo) AuthHandler {
 	return authHandler{u}
 }
 
