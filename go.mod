@@ -3,6 +3,7 @@ module github.com/tshubham7/gorm-articles
 go 1.13
 
 require (
+	github.com/aws/aws-sdk-go v1.34.13
 	github.com/dgrijalva/jwt-go v3.2.0+incompatible
 	github.com/gin-gonic/gin v1.6.3
 	github.com/go-chi/jwtauth v4.0.4+incompatible
