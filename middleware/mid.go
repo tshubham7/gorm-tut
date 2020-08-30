@@ -4,25 +4,29 @@ import (
 	"log"
 	"net/http"
 
-	"github.com/go-chi/jwtauth"
-	"github.com/go-chi/render"
+	"github.com/dgrijalva/jwt-go"
+	"github.com/gin-gonic/gin"
 	"github.com/pkg/errors"
 	"github.com/tshubham7/gorm-articles/services"
 )
 
-//Verifier verify token
-func Verifier() func(http.Handler) http.Handler {
-	return jwtauth.Verifier(services.Token())
-}
-
 //Authenticate is used to validate the authentication of an user
 //if the token is missing an error will accurd
-func Authenticate(r *http.Request) error {
-	token, _, err := jwtauth.FromContext(r.Context())
-	if err != nil || token == nil {
-		return errors.Wrap(err, "Not Authorized")
+func Authenticate(c *gin.Context) error {
+	// r.Context().Value()
+	tokenString, err := fetchHeaderAuthToken(c)
+
+	if err != nil {
+		return err
 	}
-	if !token.Valid {
+
+	token, err := services.Validate(tokenString)
+
+	if err != nil {
+		return err
+	}
+
+	if token == nil || !token.Valid {
 		return errors.New("Invalid or expired token")
 	}
 	return nil
@@ -30,25 +34,38 @@ func Authenticate(r *http.Request) error {
 
 // Authenticator is the middleware that checks
 // if the request containts an auth token
-func Authenticator() func(http.Handler) http.Handler {
-	return func(next http.Handler) http.Handler {
-		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			err := Authenticate(r)
-			if err != nil {
-				w.WriteHeader(http.StatusUnauthorized)
-				render.JSON(w, r, map[string]string{"error": err.Error()})
-				return
-			}
-			next.ServeHTTP(w, r)
-		})
+func Authenticator() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		err := Authenticate(c)
+		if err != nil {
+			// stop right here
+			c.AbortWithStatusJSON(http.StatusUnauthorized, map[string]string{"error": err.Error()})
+			return
+		}
 	}
 }
 
+// get header auth token from request
+func fetchHeaderAuthToken(c *gin.Context) (string, error) {
+	base := "Bearer "
+	tokenString := c.GetHeader("Authorization")
+	if tokenString == "" {
+		return "", errors.New("Invalid or expired token")
+	}
+	return tokenString[len(base):], nil
+}
+
 // UserID ... get user id from claim
-func UserID(r *http.Request) string {
-	_, claims, err := jwtauth.FromContext(r.Context())
+func UserID(c *gin.Context) string {
+	tokenString, err := fetchHeaderAuthToken(c)
+	token, err := services.Validate(tokenString)
+
 	if err != nil {
 		log.Printf("Error getting id from claims, err:%v", err)
+		return ""
 	}
+
+	claims := token.Claims.(jwt.MapClaims)
+
 	return claims["id"].(string)
 }

@@ -1,12 +1,11 @@
 package main
 
 import (
-	"fmt"
-
 	"github.com/gin-gonic/gin"
 	_ "github.com/jinzhu/gorm/dialects/postgres"
 	"github.com/tshubham7/gorm-articles/database"
 	"github.com/tshubham7/gorm-articles/handler"
+	mid "github.com/tshubham7/gorm-articles/middleware"
 	"github.com/tshubham7/gorm-articles/models"
 	"github.com/tshubham7/gorm-articles/repository"
 )
@@ -22,7 +21,6 @@ func main() {
 	db.AutoMigrate(&models.User{})
 	db.AutoMigrate(&models.Article{})
 	db.AutoMigrate(&models.Comment{})
-	fmt.Println("migration success")
 
 	r := gin.Default()
 	u := repository.NewUserRepo(db)
@@ -35,10 +33,10 @@ func main() {
 // auth service routes
 func auth(r *gin.Engine, u repository.UserRepo) {
 	h := handler.NewAuthHandler(u)
-	route := r.Group("api/auth")
+	route := r.Group("api/auth/")
 	{
-		route.POST("/register", h.Register())
-		route.POST("/login", h.Login())
+		route.POST("register", h.Register())
+		route.POST("login", h.Login())
 	}
 }
 
@@ -46,10 +44,10 @@ func auth(r *gin.Engine, u repository.UserRepo) {
 func article(r *gin.Engine, a repository.ArticleRepo) {
 	h := handler.NewArticleHandler(a)
 	route := r.Group("api/article")
-	// we want to add middleware to check jwt auth token
-	route.Use()
+
+	route.Use(mid.Authenticator()) // jwt auth header
 	{
-		route.POST("/", h.Create())
-		route.GET("/", h.List())
+		route.POST("", h.Create())
+		route.GET("", h.List())
 	}
 }

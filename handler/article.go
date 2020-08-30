@@ -59,6 +59,8 @@ func (ar article) Create() gin.HandlerFunc {
 // List ...
 func (ar article) List() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		fmt.Println("list handler called")
+		// userID := mid.UserID(c)
+		// fmt.Println(userID)
+		fmt.Println("list api called")
 	}
 }

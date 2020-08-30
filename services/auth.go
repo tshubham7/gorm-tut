@@ -57,11 +57,20 @@ func getSecret() string {
 	return secret
 }
 
-var jawt *jwtauth.JWTAuth
-
+// Token ...
 func Token() *jwtauth.JWTAuth {
-	jawt = jwtauth.New("HS256", []byte(getSecret()), nil)
-	return jawt
+	return jwtauth.New("HS256", []byte(getSecret()), nil)
+}
+
+// Validate ...
+func Validate(tokenString string) (*jwt.Token, error) {
+	return jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
+		// Signing method validation
+		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
+			return nil, fmt.Errorf("Unexpected signing method: %v", token.Header["alg"])
+		}
+		return []byte(getSecret()), nil
+	})
 }
 
 // sign sings the token with id and email for later use
