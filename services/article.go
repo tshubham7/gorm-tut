@@ -32,7 +32,6 @@ func (a ArticleCreateRequest) ToModel(userID string) *models.Article {
 
 	// process the image and get the image id
 	imageID, _ := image.HandleFile(a.File, a.FileHeader)
-
 	return &models.Article{
 		Content: a.Content,
 		Image:   imageID,
@@ -47,6 +46,12 @@ type ArticleService interface {
 
 	// list all articles
 	ListAll(queries *ArticleListQueryParams) ([]models.Article, error)
+
+	// delete article
+	Delete(id string) error
+
+	// article detail
+	Detail(id string) (models.Article, error)
 }
 
 // NewArticleService ...
@@ -66,4 +71,14 @@ func (ar article) Create(userID string, article ArticleCreateRequest) (*models.A
 // ListAll ...
 func (ar article) ListAll(q *ArticleListQueryParams) ([]models.Article, error) {
 	return ar.a.ListAll(q.Sort, q.Order, q.Limit, q.Offset)
+}
+
+// Delete ...
+func (ar article) Delete(id string) error {
+	return ar.a.Delete(id)
+}
+
+// Detail ...
+func (ar article) Detail(id string) (models.Article, error) {
+	return ar.a.Detail(id)
 }

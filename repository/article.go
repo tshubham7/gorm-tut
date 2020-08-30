@@ -21,6 +21,12 @@ type ArticleRepo interface {
 
 	// list articles by user id
 	ListByUser(userID string) ([]models.Article, error)
+
+	// delete article
+	Delete(id string) error
+
+	// article detail
+	Detail(id string) (models.Article, error)
 }
 
 // NewArticleRepo ...
@@ -36,7 +42,7 @@ func (a *article) Create(article *models.Article) error {
 // ListByUser ...
 func (a *article) ListByUser(userID string) ([]models.Article, error) {
 	var articles = []models.Article{}
-	result := a.db.Table("users").Where("user_id=?", userID).First(&articles)
+	result := a.db.Table("articles").Where("user_id=?", userID).First(&articles)
 	return articles, result.Error
 }
 
@@ -48,4 +54,19 @@ func (a *article) ListAll(sort, order string, limit, offset int32) ([]models.Art
 	result = result.Limit(limit).Offset(offset).Find(&articles)
 
 	return articles, result.Error
+}
+
+// Delete ...
+func (a *article) Delete(id string) error {
+
+	result := a.db.Table("articles").Where("id=?", id).Delete(&models.Article{})
+
+	return result.Error
+}
+
+// Detail ...
+func (a *article) Detail(id string) (models.Article, error) {
+	var article models.Article
+	result := a.db.Table("articles").Where("id=?", id).First(&article)
+	return article, result.Error
 }

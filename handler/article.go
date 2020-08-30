@@ -20,6 +20,12 @@ type ArticleHandler interface {
 
 	// list articles
 	List() gin.HandlerFunc
+
+	// delete article
+	Delete() gin.HandlerFunc
+
+	// article detail
+	Detail() gin.HandlerFunc
 }
 
 // NewArticleHandler ...
@@ -77,8 +83,71 @@ func (ar article) List() gin.HandlerFunc {
 		}
 
 		articles, err := sr.ListAll(queries)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{
+				"message": "failed to fetch articles",
+				"error":   err.Error(),
+			})
+			return
+		}
 
 		c.JSON(http.StatusOK, articles)
+	}
+}
+
+// Delete ...
+func (ar article) Delete() gin.HandlerFunc {
+	sr := services.NewArticleService(ar.a)
+
+	return func(c *gin.Context) {
+		id := c.Param("id")
+
+		if id == "" {
+			c.JSON(http.StatusBadRequest, gin.H{
+				"message": "missing or invalid params: id ",
+				"error":   "can not allow blank article id",
+			})
+			return
+		}
+
+		err := sr.Delete(id)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{
+				"message": "failed to delete article",
+				"error":   err.Error(),
+			})
+			return
+		}
+
+		c.JSON(http.StatusOK, gin.H{"message": "successfully deleted"})
+	}
+}
+
+// Detail ...
+func (ar article) Detail() gin.HandlerFunc {
+	sr := services.NewArticleService(ar.a)
+
+	return func(c *gin.Context) {
+		id := c.Param("id")
+
+		if id == "" {
+			c.JSON(http.StatusBadRequest, gin.H{
+				"message": "missing or invalid params: id ",
+				"error":   "can not allow blank article id",
+			})
+			return
+		}
+
+		a, err := sr.Detail(id)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{
+				"message": "failed to delete article",
+				"error":   err.Error(),
+			})
+			return
+		}
+
+		c.JSON(http.StatusOK, a)
 	}
 }
 
@@ -110,8 +179,8 @@ func validateQueries(args ...string) (*services.ArticleListQueryParams, error) {
 	}
 
 	return &services.ArticleListQueryParams{
-		sort.String(),
-		order.String(),
-		limit.Int(),
-		offset.Int()}, nil
+		Sort:   sort.String(),
+		Order:  order.String(),
+		Limit:  limit.Int(),
+		Offset: offset.Int()}, nil
 }

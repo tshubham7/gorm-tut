@@ -33,21 +33,23 @@ func main() {
 // auth service routes
 func auth(r *gin.Engine, u repository.UserRepo) {
 	h := handler.NewAuthHandler(u)
-	route := r.Group("api/auth/")
+	route := r.Group("/api/auth")
 	{
-		route.POST("register", h.Register())
-		route.POST("login", h.Login())
+		route.POST("/register", h.Register())
+		route.POST("/login", h.Login())
 	}
 }
 
 // article service routes
 func article(r *gin.Engine, a repository.ArticleRepo) {
 	h := handler.NewArticleHandler(a)
-	route := r.Group("api/article")
+	route := r.Group("/api/article")
 
 	route.Use(mid.Authenticator()) // jwt auth header
 	{
-		route.POST("", h.Create())
-		route.GET("", h.List())
+		route.POST("/", h.Create())
+		route.GET("/", h.List())
+		route.DELETE("/:id", h.Delete())
+		route.GET("/:id", h.Detail())
 	}
 }
